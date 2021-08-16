@@ -11,6 +11,7 @@ import cv2
 import numpy as np
 import torch
 from torch.nn import functional as F
+from alphapose.utils.read_img import read_img
 
 
 def rnd(x):
@@ -108,7 +109,7 @@ def torch_to_im(img):
 
 def load_image(img_path):
     # H x W x C => C x H x W
-    return im_to_torch(cv2.cvtColor(cv2.imread(img_path), cv2.COLOR_BGR2RGB))#scipy.misc.imread(img_path, mode='RGB'))
+    return im_to_torch(read_img(img_path))#scipy.misc.imread(img_path, mode='RGB'))
 
 
 def to_numpy(tensor):

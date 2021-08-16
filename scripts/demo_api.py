@@ -19,6 +19,7 @@ from alphapose.utils.transforms import get_func_heatmap_to_coord
 from alphapose.utils.pPose_nms import pose_nms
 from alphapose.utils.presets import SimpleTransform
 from alphapose.utils.transforms import flip, flip_heatmap
+from alphapose.utils.read_img import read_img
 from alphapose.models import builder
 from alphapose.utils.config import update_config
 from detector.apis import get_detector
@@ -347,7 +348,7 @@ def example():
 
     demo = SingleImageAlphaPose(args, cfg)
     im_name = args.inputimg    # the path to the target image
-    image = cv2.cvtColor(cv2.imread(im_name), cv2.COLOR_BGR2RGB)
+    image = read_img(im_name)
     pose = demo.process(im_name, image)
     img = demo.getImg()     # or you can just use: img = cv2.imread(image)
     img = demo.vis(img, pose)   # visulize the pose result

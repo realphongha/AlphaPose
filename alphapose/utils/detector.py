@@ -1,3 +1,4 @@
+from alphapose.utils.read_img import read_img
 import os
 import sys
 from threading import Thread
@@ -8,7 +9,7 @@ import numpy as np
 
 import torch
 import torch.multiprocessing as mp
-
+from alphapose.utils.read_img import read_img
 from alphapose.utils.presets import SimpleTransform
 from alphapose.models import builder
 
@@ -139,7 +140,7 @@ class DetectionLoader():
                 # add one dimension at the front for batch if image shape (3,h,w)
                 if img_k.dim() == 3:
                     img_k = img_k.unsqueeze(0)
-                orig_img_k = cv2.cvtColor(cv2.imread(im_name_k), cv2.COLOR_BGR2RGB) # scipy.misc.imread(im_name_k, mode='RGB') is depreciated
+                orig_img_k = read_img(im_name_k)
                 im_dim_list_k = orig_img_k.shape[1], orig_img_k.shape[0]
 
                 imgs.append(img_k)

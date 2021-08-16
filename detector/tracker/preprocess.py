@@ -7,6 +7,7 @@ from torch.autograd import Variable
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
+from alphapose.utils.read_img import read_img
 try:
     from util import count_parameters as count
     from util import convert2cpu as cpu
@@ -39,7 +40,7 @@ def prep_image(img, img_size=(1088, 608)):
     Returns a Variable
     """
 
-    orig_im = cv2.imread(img)
+    orig_im = read_img(img, True)
     dim = orig_im.shape[1], orig_im.shape[0]
     img = (letterbox_image(orig_im, img_size))
     img_ = img[:, :, ::-1].transpose((2, 0, 1)).copy()

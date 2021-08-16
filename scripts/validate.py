@@ -101,7 +101,7 @@ def validate(m, heatmap_to_coord, batch_size=20):
     with open('./exp/json/validate_rcnn_kpt.json', 'w') as fid:
         json.dump(kpt_json, fid)
     res = evaluate_mAP('./exp/json/validate_rcnn_kpt.json', ann_type='keypoints', ann_file=os.path.join(cfg.DATASET.VAL.ROOT, cfg.DATASET.VAL.ANN))
-    return res['AP']
+    return res['AP'] if type(res) == dict else res
 
 
 def validate_gt(m, cfg, heatmap_to_coord, batch_size=20):
@@ -156,7 +156,7 @@ def validate_gt(m, cfg, heatmap_to_coord, batch_size=20):
     with open('./exp/json/validate_gt_kpt.json', 'w') as fid:
         json.dump(kpt_json, fid)
     res = evaluate_mAP('./exp/json/validate_gt_kpt.json', ann_type='keypoints', ann_file=os.path.join(cfg.DATASET.VAL.ROOT, cfg.DATASET.VAL.ANN))
-    return res['AP']
+    return res['AP'] if type(res) == dict else res
 
 
 if __name__ == "__main__":

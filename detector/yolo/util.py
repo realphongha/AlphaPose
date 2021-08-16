@@ -8,6 +8,7 @@ from torch.autograd import Variable
 import numpy as np
 import cv2 
 import matplotlib.pyplot as plt
+from alphapose.utils.read_img import read_img
 try:
     from bbox import bbox_iou
 except ImportError:
@@ -92,7 +93,7 @@ def load_classes(namesfile):
     return names
 
 def get_im_dim(im):
-    im = cv2.imread(im)
+    im = read_img(im, True)
     w,h = im.shape[1], im.shape[0]
     return w,h
 

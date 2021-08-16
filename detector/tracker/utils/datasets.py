@@ -9,7 +9,7 @@ from collections import OrderedDict
 import cv2
 import numpy as np
 import torch
-
+from alphapose.utils.read_img import read_img
 from torch.utils.data import Dataset
 from utils.utils import xyxy2xywh
 
@@ -40,7 +40,7 @@ class LoadImages:  # for inference
         img_path = self.files[self.count]
 
         # Read image
-        img0 = cv2.imread(img_path)  # BGR
+        img0 = read_img(img_path, True)  # BGR
         assert img0 is not None, 'Failed to load ' + img_path
 
         # Padded resize
@@ -59,7 +59,7 @@ class LoadImages:  # for inference
         img_path = self.files[idx]
 
         # Read image
-        img0 = cv2.imread(img_path)  # BGR
+        img0 = read_img(img_path, True)  # BGR
         assert img0 is not None, 'Failed to load ' + img_path
 
         # Padded resize
@@ -149,7 +149,7 @@ class LoadImagesAndLabels:  # for training
     def get_data(self, img_path, label_path):
         height = self.height
         width = self.width
-        img = cv2.imread(img_path)  # BGR
+        img = read_img(img_path, True)  # BGR
         if img is None:
             raise ValueError('File corrupt {}'.format(img_path))
         augment_hsv = True

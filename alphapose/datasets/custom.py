@@ -11,7 +11,7 @@ from abc import abstractmethod, abstractproperty
 
 import torch.utils.data as data
 from pycocotools.coco import COCO
-
+from alphapose.utils.read_img import read_img
 from alphapose.utils.presets import SimpleTransform
 
 import cv2
@@ -109,7 +109,7 @@ class CustomDataset(data.Dataset):
 
         # load ground truth, including bbox, keypoints, image size
         label = copy.deepcopy(self._labels[idx])
-        img = cv2.cvtColor(cv2.imread(img_path), cv2.COLOR_BGR2RGB)
+        img = read_img(img_path)
         
         if self.bgim and (source == 'frei' or source == 'partX' or source == 'OneHand' or source == 'interhand'): # hand
             img, label = self.hand_augmentation(img, label)
@@ -177,7 +177,7 @@ class CustomDataset(data.Dataset):
         file_name = bgimgpath['file_name']
         img_name = file_name.split('/')[-1]
         img_path = '/home/group3/coco/train2017/' + img_name
-        img = cv2.cvtColor(cv2.imread(img_path), cv2.COLOR_BGR2RGB)
+        img = read_img(img_path)
         img_h, img_w = img.shape[0], img.shape[1]
 
         if img_h <= box_h or img_w <= box_w:

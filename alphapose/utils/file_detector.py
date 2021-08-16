@@ -1,4 +1,5 @@
 from itertools import count
+from os import read
 from threading import Thread
 from queue import Queue
 import json
@@ -8,7 +9,7 @@ import numpy as np
 
 import torch
 import torch.multiprocessing as mp
-
+from alphapose.utils.read_img import read_img
 from alphapose.utils.presets import SimpleTransform
 
 
@@ -120,7 +121,7 @@ class FileDetectionLoader():
             boxes = torch.from_numpy(np.array(self.all_boxes[im_name_k]))
             scores = torch.from_numpy(np.array(self.all_scores[im_name_k]))
             ids = torch.from_numpy(np.array(self.all_ids[im_name_k]))
-            orig_img_k = cv2.cvtColor(cv2.imread(im_name_k), cv2.COLOR_BGR2RGB) #scipy.misc.imread(im_name_k, mode='RGB') is depreciated
+            orig_img_k = read_img(im_name_k)
 
 
             inps = torch.zeros(boxes.size(0), 3, *self._input_size)
