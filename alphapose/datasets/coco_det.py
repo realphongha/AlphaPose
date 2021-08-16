@@ -36,7 +36,7 @@ class Mscoco_det(data.Dataset):
         self._opt = opt
         self._preset_cfg = cfg['PRESET']
         self._root = cfg['ROOT']
-        self.cocoapi = True if cfg['ROOT'] == "!api!" else False
+        self.cocoapi = True if "USE_API" in cfg and cfg["USE_API"] else False
         self._img_prefix = cfg['IMG_PREFIX']
         if not det_file:
             det_file = cfg['DET_FILE']
