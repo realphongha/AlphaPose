@@ -50,6 +50,7 @@ class CustomDataset(data.Dataset):
         self._cfg = cfg
         self._preset_cfg = cfg['PRESET']
         self._root = cfg['ROOT']
+        self.cocoapi = True if self._root == "!api!" else False
         self._img_prefix = cfg['IMG_PREFIX']
         self._ann_file = os.path.join(self._root, cfg['ANN'])
 

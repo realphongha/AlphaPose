@@ -16,6 +16,9 @@ from alphapose.utils.presets import SimpleTransform
 from detector.apis import get_detector
 from alphapose.models.builder import DATASET
 
+from pycocotools.coco import COCO
+import pathlib
+
 
 @DATASET.register_module
 class Mscoco_det(data.Dataset):
@@ -33,6 +36,7 @@ class Mscoco_det(data.Dataset):
         self._opt = opt
         self._preset_cfg = cfg['PRESET']
         self._root = cfg['ROOT']
+        self.cocoapi = True if cfg['ROOT'] == "!api!" else False
         self._img_prefix = cfg['IMG_PREFIX']
         if not det_file:
             det_file = cfg['DET_FILE']
@@ -61,6 +65,8 @@ class Mscoco_det(data.Dataset):
                 rot=0, sigma=self._sigma,
                 train=False, add_dpg=False)
 
+        self._coco = COCO(self._ann_file)
+
     def __getitem__(self, index):
         det_res = self._det_json[index]
         if not isinstance(det_res['image_id'], int):
@@ -68,7 +74,11 @@ class Mscoco_det(data.Dataset):
             img_id = int(img_id)
         else:
             img_id = det_res['image_id']
-        img_path = './data/coco/val2017/%012d.jpg' % img_id
+        if self.cocoapi:
+            img = self._coco.loadImgs(img_id)[0]
+            img_path = img["coco_url"]
+        else:
+            img_path = './data/coco/val2017/%012d.jpg' % img_id
 
         # Load image
         image = read_img(img_path)
@@ -83,16 +93,16 @@ class Mscoco_det(data.Dataset):
         return len(self._det_json)
 
     def write_coco_json(self, det_file):
-        from pycocotools.coco import COCO
-        import pathlib
-
         _coco = COCO(self._ann_file)
         image_ids = sorted(_coco.getImgIds())
         det_model = get_detector(self._opt)
         dets = []
         for entry in tqdm(_coco.loadImgs(image_ids)):
-            abs_path = os.path.join(
-                self._root, self._img_prefix, entry['file_name'])
+            if self.cocoapi:
+                abs_path = entry["coco_url"]
+            else:
+                abs_path = os.path.join(
+                    self._root, self._img_prefix, entry['file_name'])
             det = det_model.detect_one_img(abs_path)
             if det:
                 dets += det

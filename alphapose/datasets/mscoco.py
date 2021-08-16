@@ -49,17 +49,18 @@ class Mscoco(CustomDataset):
         # iterate through the annotations
         image_ids = sorted(_coco.getImgIds())
         for entry in _coco.loadImgs(image_ids):
-            dirname, filename = entry['coco_url'].split('/')[-2:]
-            abs_path = os.path.join(self._root, dirname, filename)
-            if not os.path.exists(abs_path):
-                raise IOError('Image: {} not exists.'.format(abs_path))
+            if not self.cocoapi:
+                dirname, filename = entry['coco_url'].split('/')[-2:]
+                abs_path = os.path.join(self._root, dirname, filename)
+                if not os.path.exists(abs_path):
+                    raise IOError('Image: {} not exists.'.format(abs_path))
             label = self._check_load_keypoints(_coco, entry)
             if not label:
                 continue
 
             # num of items are relative to person, not image
             for obj in label:
-                items.append(abs_path)
+                items.append(entry['coco_url'] if self.cocoapi else abs_path)
                 labels.append(obj)
 
         return items, labels
