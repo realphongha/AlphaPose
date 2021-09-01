@@ -11,6 +11,7 @@ from tqdm import tqdm
 import natsort
 
 from detector.apis import get_detector
+import trackers
 from trackers.tracker_api import Tracker
 from trackers.tracker_cfg import cfg as tcfg
 from trackers import track
@@ -21,6 +22,7 @@ from alphapose.utils.transforms import flip, flip_heatmap
 from alphapose.utils.vis import getTime
 from alphapose.utils.webcam_detector import WebCamDetectionLoader
 from alphapose.utils.writer import DataWriter
+from trackers.sort.sort import Sort
 
 """----------------------------- Demo options -----------------------------"""
 parser = argparse.ArgumentParser(description='AlphaPose Demo')
@@ -82,6 +84,12 @@ parser.add_argument('--pose_flow', dest='pose_flow',
                     help='track humans in video with PoseFlow', action='store_true', default=False)
 parser.add_argument('--pose_track', dest='pose_track',
                     help='track humans in video with reid', action='store_true', default=False)
+parser.add_argument('--sort_track', dest='sort_track',
+                    help='track humans in video with SORT', action='store_true', default=False)
+parser.add_argument('--sort_maxage', type=int, default=20,
+                    help='max_age param for SORT')
+parser.add_argument('--sort_minhits', type=int, default=3,
+                    help='minhits param for SORT')
 
 args = parser.parse_args()
 cfg = update_config(args.cfg)
@@ -93,7 +101,8 @@ args.gpus = [int(i) for i in args.gpus.split(',')] if torch.cuda.device_count() 
 args.device = torch.device("cuda:" + str(args.gpus[0]) if args.gpus[0] >= 0 else "cpu")
 args.detbatch = args.detbatch * len(args.gpus)
 args.posebatch = args.posebatch * len(args.gpus)
-args.tracking = args.pose_track or args.pose_flow or args.detector=='tracker'
+args.tracking = args.pose_track or args.sort_track or \
+                args.pose_flow or args.detector=='tracker'
 
 if not args.sp:
     torch.multiprocessing.set_start_method('forkserver', force=True)
@@ -183,6 +192,8 @@ if __name__ == "__main__":
     pose_dataset = builder.retrieve_dataset(cfg.DATASET.TRAIN)
     if args.pose_track:
         tracker = Tracker(tcfg, args)
+    elif args.sort_track:
+        tracker = Sort(args.sort_maxage, args.sort_minhits)
     if len(args.gpus) > 1:
         pose_model = torch.nn.DataParallel(pose_model, device_ids=args.gpus).to(args.device)
     else:
@@ -255,6 +266,21 @@ if __name__ == "__main__":
                     runtime_profile['pt'].append(pose_time)
                 if args.pose_track:
                     boxes,scores,ids,hm,cropped_boxes = track(tracker,args,orig_img,inps,boxes,hm,cropped_boxes,im_name,scores)
+                elif args.sort_track:
+                    inputs = np.concatenate((np.asarray(boxes), 
+                                             np.asarray(scores)), 
+                                            axis=1)
+                    inputs = np.concatenate((inputs, 
+                                             np.expand_dims(np.arange(0, boxes.shape[0]), 1)), 
+                                            axis=1) # adds original ids to track
+                    outputs = tracker.update(inputs)
+                    boxes = outputs[:, 0:4]
+                    ids = outputs[:, 4]
+                    original_index = outputs[:, 5]
+                    # maps tracked bboxes to original results:
+                    scores = scores[original_index]
+                    cropped_boxes = cropped_boxes[original_index]
+                    hm = hm[original_index]
                 hm = hm.cpu()
                 writer.save(boxes, scores, ids, hm, cropped_boxes, orig_img, im_name)
                 if args.profile:
@@ -276,7 +302,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(repr(e))
         print('An error as above occurs when processing the images, please check it')
-        pass
     except KeyboardInterrupt:
         print_finish_info()
         # Thread won't be killed when press Ctrl+C
@@ -293,4 +318,3 @@ if __name__ == "__main__":
             writer.terminate()
             writer.clear_queues()
             det_loader.clear_queues()
-

@@ -110,7 +110,7 @@ class DataWriter():
                     pose_scores.append(torch.from_numpy(pose_score).unsqueeze(0))
                 preds_img = torch.cat(pose_coords)
                 preds_scores = torch.cat(pose_scores)
-                if not self.opt.pose_track:
+                if not (self.opt.pose_track or self.opt.sort_track):
                     boxes, scores, ids, preds_img, preds_scores, pick_ids = \
                         pose_nms(boxes, scores, ids, preds_img, preds_scores, self.opt.min_box_area)
 
